@@ -10,11 +10,14 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from sklearn.ensemble import IsolationForest         # Algoritma deteksi anomali dari Modul 5
+import uuid
 
 BASE       = Path(__file__).parent
 SILVER     = BASE / "lake" / "silver"
 GOLD       = BASE / "lake" / "gold"
 MODEL_PATH = BASE / "models" / "iso_accis_v1.joblib" # Lokasi file model terlatih
+
+
 
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     """Menyiapkan fitur numerik yang konsisten untuk Training maupun Scoring."""
@@ -68,7 +71,7 @@ def run_batch_scoring():
     cols = ["djo_id", "mjo_code", "mjo_date", "acc_code", "acc_name",
             "amount", "rasio_rata2", "score", "input_by", "mjo_desc"]
     target = GOLD / "anomaly_flags.parquet"
-    tmp    = target.with_suffix(".tmp.parquet")
+    tmp    = target.with_name(f".{target.stem}_{uuid.uuid4().hex}.tmp.parquet")
     flagged[cols].to_parquet(tmp, index=False)
     os.replace(tmp, target)
 
