@@ -24,10 +24,15 @@ GOLD   = BASE / "lake" / "gold"
 WM     = BASE / "lake" / "bronze" / "watermark.json"
 
 # Pastikan data Gold tersedia saat pertama kali dibuka (penting saat deploy ke Cloud!)
-if not (GOLD / "anomaly_flags.parquet").exists():
-    with st.spinner("Menyiapkan Lakehouse ACCIS untuk pertama kali..."):
+@st.cache_resource
+def init_lakehouse():
+    """Menjamin inisialisasi awal Lakehouse hanya berjalan sekali di Cloud."""
+    if not (GOLD / "anomaly_flags.parquet").exists():
         run_pipeline()
         run_batch_scoring()
+    return True
+
+init_lakehouse()
 
 # 2. FUNGSI MEMUAT DATA GOLD (DENGAN CACHE 60 DETIK AGAR RINGAN)
 @st.cache_data(ttl=60)
