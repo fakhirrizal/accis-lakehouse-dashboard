@@ -11,6 +11,7 @@ from pathlib import Path        # Mengelola alamat folder agar aman di Windows &
 import numpy as np              # Generator angka acak untuk data sintetis ACCIS
 import pandas as pd             # Pengolahan tabel data (DataFrame)
 import duckdb                   # Mesin SQL lokal di atas file Parquet
+import uuid
 
 # 1. KONFIGURASI FOLDER & LOGGING
 BASE = Path(__file__).parent                       # Lokasi folder project saat ini
@@ -32,10 +33,10 @@ logging.basicConfig(
 )
 
 def atomic_to_parquet(df: pd.DataFrame, target_path: Path):
-    """Menyimpan DataFrame ke Parquet secara ATOMIK (anti-corrupt saat dibaca dashboard)."""
-    tmp_path = target_path.with_suffix(".tmp.parquet")   # Tulis dulu ke file sementara
-    df.to_parquet(tmp_path, index=False)                 # Simpan isi lengkap ke .tmp
-    os.replace(tmp_path, target_path)                    # Tukar file dalam 1 operasi instan
+    """Menyimpan DataFrame ke Parquet secara ATOMIK dengan nama file sementara unik."""
+    tmp_path = target_path.with_name(f".{target_path.stem}_{uuid.uuid4().hex}.tmp.parquet")
+    df.to_parquet(tmp_path, index=False)
+    os.replace(tmp_path, target_path)
 
 def load_watermark() -> dict:
     """Membaca ID jurnal terakhir yang pernah ditarik (seperti pembatas buku)."""
