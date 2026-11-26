@@ -4,6 +4,7 @@
 # ==============================================================================
 
 import json
+from datetime import datetime                       # Untuk memformat tanggal "Terakhir diperbarui"
 import duckdb                                        # Query SQL langsung di atas file Parquet
 import pandas as pd
 import plotly.express as px                          # Grafik interaktif (bisa di-hover & zoom)
@@ -22,6 +23,19 @@ st.set_page_config(
 BASE   = Path(__file__).parent
 GOLD   = BASE / "lake" / "gold"
 WM     = BASE / "lake" / "bronze" / "watermark.json"
+
+# Nama hari & bulan Indonesia agar tanggal tampil ramah dibaca
+HARI  = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+BULAN = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli",
+         "Agustus", "September", "Oktober", "November", "Desember"]
+
+def format_tanggal_id(iso_text):
+    """Ubah '2026-11-25T19:43:29+07:00' menjadi 'Rabu, 25 November 2026'."""
+    try:
+        dt = datetime.fromisoformat(iso_text)
+        return f"{HARI[dt.weekday()]}, {dt.day} {BULAN[dt.month]} {dt.year}"
+    except (TypeError, ValueError):
+        return "-"                                       # Jika watermark belum ada / format tak dikenali
 
 # Pastikan data Gold tersedia saat pertama kali dibuka (penting saat deploy ke Cloud!)
 @st.cache_resource
@@ -51,7 +65,7 @@ wm_info = json.loads(WM.read_text(encoding="utf-8")) if WM.exists() else {}
 # 3. SIDEBAR KIRI: FILTER & KONTROL PIPELINE
 with st.sidebar:
     st.header("⚙️ Kontrol Lakehouse")
-    st.caption(f"Terakhir diperbarui: **{wm_info.get('updated_at', '-')}**")
+    st.caption(f"Terakhir diperbarui: **{format_tanggal_id(wm_info.get('updated_at'))}**")
     st.caption(f"Watermark terakhir: `mjo_id = {wm_info.get('last_mjo_id', 0)}`")
 
     # Tombol simulasi penarikan data baru secara incremental + scoring otomatis
@@ -69,7 +83,8 @@ with st.sidebar:
     tahun_pilih = st.selectbox("📅 Pilih Tahun Laporan", tahun_opsi)
 
     # Filter batas minimal skor anomali
-    min_skor = st.slider("Batas Minimal Skor Anomali", 0.50, 0.85, 0.60, 0.01)
+    min_skor = st.slider("Batas Minimal Skor Anomali", 0.50, 0.85, 0.60, 0.01,
+                         help="0.50 = normal, makin mendekati 1 = makin janggal")
 
     st.divider()
     # Input API Key Gemini gratis untuk fitur Tab 3 (AI Auditor Copilot)
