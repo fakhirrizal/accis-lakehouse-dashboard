@@ -8,16 +8,14 @@ import sys
 import joblib                                        # Pustaka untuk menyimpan/memuat model ML
 import numpy as np
 import pandas as pd
+import uuid
 from pathlib import Path
 from sklearn.ensemble import IsolationForest         # Algoritma deteksi anomali dari Modul 5
-import uuid
 
 BASE       = Path(__file__).parent
 SILVER     = BASE / "lake" / "silver"
 GOLD       = BASE / "lake" / "gold"
 MODEL_PATH = BASE / "models" / "iso_accis_v1.joblib" # Lokasi file model terlatih
-
-
 
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     """Menyiapkan fitur numerik yang konsisten untuk Training maupun Scoring."""
