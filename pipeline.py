@@ -6,7 +6,7 @@
 import os                       # Operasi sistem file & atomic rename (os.replace)
 import json                     # Membaca & menulis file metadata watermark.json
 import logging                  # Mencatat riwayat proses ke file pipeline.log
-from datetime import datetime   # Stempel waktu ekstraksi
+from datetime import datetime, timezone, timedelta   # Stempel waktu ekstraksi (zona WIB)
 from pathlib import Path        # Mengelola alamat folder agar aman di Windows & Mac
 import numpy as np              # Generator angka acak untuk data sintetis ACCIS
 import pandas as pd             # Pengolahan tabel data (DataFrame)
@@ -131,7 +131,7 @@ def run_pipeline(batch_size: int = 3000):
     acc, mj_new, dj_new, ak = generate_accis_batch(start_id, n_new, seed=42 + run_no)
 
     # --- TAHAP 1: INGEST INCREMENTAL KE BRONZE ---
-    now_ts = datetime.now().isoformat(timespec="seconds")
+    now_ts = datetime.now(timezone(timedelta(hours=7))).isoformat(timespec="seconds")   # WIB (UTC+7), server Cloud default-nya UTC
     for df_part, name in [(mj_new, "mjournal"), (dj_new, "djournal")]:
         df_part["_source_table"] = name
         df_part["_ingested_at"] = now_ts
